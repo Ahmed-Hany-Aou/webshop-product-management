@@ -62,6 +62,9 @@ class ProductController extends Controller
     public function show($id)
     {
         $products = $this->productService->getProductsByID($id);
+        if (!$products) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
         return response()->json($products);
 
     }
