@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\ProductServiceInterface;
 
+use App\Http\Requests\ProductRequest;
+
 
 class ProductController extends Controller
 {
@@ -40,10 +42,19 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+
+       // Handle creating a product
+    public function store(ProductRequest $request)
     {
-        //
+        // The request will be validated automatically at this point
+        $validatedData = $request->validated();
+
+        // Use the validated data to create a product using the service
+        $product = $this->productService->createProduct($validatedData);
+
+        return response()->json($product, 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -66,16 +77,34 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+
+
+         // Handle updating a product
+    public function update(ProductRequest $request, $id)
     {
-        //
+        // The request will be validated automatically at this point
+        $validatedData = $request->validated();
+
+        $product = $this->productService->updateProduct($id, $validatedData);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        return response()->json($product);
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $deleted = $this->productService->deleteProduct($id);
+        if (!$deleted) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        return response()->json(['message' => 'Product deleted successfully']);
     }
+
 }
