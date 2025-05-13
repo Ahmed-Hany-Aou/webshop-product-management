@@ -10,5 +10,10 @@ interface ProductServiceInterface
     public function getAllProducts();
 
     public function getProductsByID($id);
+
+    public function updateProduct($id, $validatedData);
+
+    public function createProduct($validatedData);
+    public function deleteProduct($id);
 }
 
