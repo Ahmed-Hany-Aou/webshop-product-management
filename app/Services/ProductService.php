@@ -8,6 +8,18 @@ use App\Models\Product;
 
 class ProductService implements ProductServiceInterface
 {
+
+    protected $priceAdjustmentService;
+
+    public function __construct(PriceAdjustmentService $priceAdjustmentService)
+    {
+        $this->priceAdjustmentService = $priceAdjustmentService;
+    }
+
+
+
+
+
     public function getAllProducts()
     {
         // This method gets all the products
@@ -19,22 +31,27 @@ class ProductService implements ProductServiceInterface
         return Product::find($id); 
     }
 
-    public function updateProduct($id, $validatedData){
-        // This method updates a product by ID
+    public function updateProduct($id, $validatedData)
+    {
         $product = Product::find($id);
         if ($product) {
             $product->update($validatedData);
+            // Adjust the price based on stock level
+            $product = $this->priceAdjustmentService->adjustPrice($product);
+            $product->save();  // Save the adjusted price
             return $product;
+           
         }
-        return null; // or throw an exception if not found
-
-
+        return null;
     }
 
-    public function createProduct($validatedData){
-        // This method creates a new product
-        return Product::create($validatedData);
-
+    public function createProduct($validatedData)
+    {
+        $product = Product::create($validatedData);
+        // Adjust the price based on stock level
+        $product = $this->priceAdjustmentService->adjustPrice($product);
+        $product->save();  // Save the adjusted price
+       return $product;
     }
     public function deleteProduct($id){
         // This method deletes a product by ID
