@@ -48,9 +48,11 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $products = $this->productService->getProductsByID($id);
+        return response()->json($products);
+
     }
 
     /**

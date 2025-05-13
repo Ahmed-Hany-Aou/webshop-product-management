@@ -8,4 +8,7 @@ namespace App\Services;
 interface ProductServiceInterface
 {
     public function getAllProducts();
+
+    public function getProductsByID($id);
 }
+
