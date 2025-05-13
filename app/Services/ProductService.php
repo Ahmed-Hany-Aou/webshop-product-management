@@ -13,4 +13,9 @@ class ProductService implements ProductServiceInterface
         // This method gets all the products
         return Product::all();  
     }
+    public function getProductsByID($id){
+
+        // this method returns product by specific ID
+        return Product::find($id); 
+    }
 }
