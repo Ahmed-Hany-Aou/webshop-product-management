@@ -10,4 +10,6 @@ Route::get('/', function () {
 Route::prefix('products')->group(function() {
     // Get All products
     Route::get('/', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
+
 });
