@@ -1,21 +1,21 @@
 <?php
-/*
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Backend\ProductController;
 
-use App\Http\Controllers\AuthController;
-use Illuminate\Http\Request;
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+
 
 // Authentication Routes
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
-Route::post('/register', [AuthController::class, 'register'])->name('api.register');
-// Authentication Routes
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 
-
-
-
-// Protected Product Routes (require authentication)
+// Protected Routes for Products
 Route::middleware('auth:sanctum')->prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
     Route::get('/{id}', [ProductController::class, 'show']);
@@ -24,7 +24,5 @@ Route::middleware('auth:sanctum')->prefix('products')->group(function () {
     Route::delete('/{id}', [ProductController::class, 'destroy']);
 });
 
-// User Info Route
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-});
+// User Info Route (authenticated)
+//Route::middleware(['auth:sanctum'])->get('user', [AuthController::class, 'user']);
