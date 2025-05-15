@@ -18,7 +18,9 @@ class ProductApiTest extends TestCase
      */
 
 
-    public function test_index_withData_returnsProducts()  //More Explicit: test_index_withData_returnsProducts()
+
+     //Route::get("/", [ProductController::class, "index"])->middleware("can:viewAny,App\Models\Product");
+    public function test_index_withData_returnsProducts()  
     {
         // Create a product in the database
         Product::factory()->create();
@@ -41,4 +43,31 @@ class ProductApiTest extends TestCase
             '*' => ['id', 'name', 'description', 'price', 'stock_quantity','created_at',"updated_at"]  // no need to return all data as postman-- main thing is to return same columns name as our db-- dont forget we testing on web_shop test db and you can return with "" or with ''
         ]);
     }
+
+
+
+
+    //    Route::get("/{product}", [ProductController::class, "show"])->middleware("can:view,product");
+ public function test_show_withData_returnsProductBySpecificID(){
+      Product::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('YourAppName')->plainTextToken; // Get the API token
+
+
+        $response = $this->get('/api/products', [
+            'Authorization' => 'Bearer ' . $token,  // Pass the Bearer token in the request
+      
+        ]);
+         $response->assertStatus(200);
+           $response->assertJsonStructure([
+            '*' => ['id', 'name', 'description', 'price', 'stock_quantity','created_at',"updated_at"] 
+            
+        ]);
+
+ }
+
+
+
+
+
 }
