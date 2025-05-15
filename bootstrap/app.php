@@ -19,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             '/register',
             '/login',
             '/products',
-            '/products/{id}',
+            'products/{id}',
+            '/api/*', // Exclude all /api/ routes
         ]);
         
         // Add Sanctum's middleware for stateful requests
