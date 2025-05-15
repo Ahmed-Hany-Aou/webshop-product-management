@@ -9,6 +9,9 @@ use App\Http\Controllers\Backend\ProductController;
 // Authentication Routes
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+// routes/api.php
+
+
 
 Route::middleware(["auth:sanctum", "throttle:10,1"])->prefix("products")->group(function () {
     Route::get("/", [ProductController::class, "index"])->middleware("can:viewAny,App\Models\Product");
