@@ -2,25 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeEmail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
     // Register user
     public function register(Request $request)
     {
-        // Validate incoming data
-        $validator = Validator::make($request->all(), [
+        // Use the built-in $request->validate() method for validation
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed', // `password_confirmation` field must match `password`
+            'password' => 'required|string|min:8|confirmed',  // `password_confirmation` field must match `password`
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+        // Check if the email is already registered (this is extra, since validate already checks this)
+        $existingUser = User::where('email', $request->email)->first();
+        if ($existingUser) {
+            return response()->json(['message' => 'Email is already registered'], 409);
         }
 
         // Create user
@@ -33,6 +36,10 @@ class AuthController extends Controller
         // Create API token for the user
         $token = $user->createToken('YourAppName')->plainTextToken;
 
+        // Send a welcome email
+        Mail::to($user->email)->send(new WelcomeEmail($user));
+        
+
         return response()->json(['token' => $token, 'message' => 'User created successfully'], 201);
     }
 
@@ -40,14 +47,10 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // Validate incoming data
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string|min:8',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
 
         // Find user by email
         $user = User::where('email', $request->email)->first();

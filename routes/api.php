@@ -9,8 +9,7 @@ use App\Http\Controllers\Backend\ProductController;
 // Authentication Routes
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-// routes/api.php
-
+Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']); // Added logout route
 
 
 Route::middleware(["auth:sanctum", "throttle:10,1"])->prefix("products")->group(function () {
@@ -18,7 +17,7 @@ Route::middleware(["auth:sanctum", "throttle:10,1"])->prefix("products")->group(
     Route::get("/{product}", [ProductController::class, "show"])->middleware("can:view,product");
 
                                                                                                     // However, for consistency with update/delete, you might consider changing this to {product} and can:view,product too.
-    Route::post("/", [ProductController::class, "store"])->middleware("can:create,App\Models\Product"); // This was commented out in your file, uncomment if needed.
+    Route::post("/", [ProductController::class, "store"])->middleware("can:create,App\Models\Product"); 
     
     // THIS IS THE CORRECT ROUTE FOR UPDATE
     Route::put("/{product}", [ProductController::class, "update"])->middleware("can:update,product");
