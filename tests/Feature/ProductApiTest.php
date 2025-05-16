@@ -46,15 +46,14 @@ class ProductApiTest extends TestCase
 
 
 
-
-    //    Route::get("/{product}", [ProductController::class, "show"])->middleware("can:view,product");
+  //    Route::get("/{product}", [ProductController::class, "show"])->middleware("can:view,product");
  public function test_show_withData_returnsProductBySpecificID(){
-      Product::factory()->create();
+      $product=Product::factory()->create();
         $user = User::factory()->create();
         $token = $user->createToken('YourAppName')->plainTextToken; // Get the API token
 
 
-        $response = $this->get('/api/products', [
+        $response = $this->get('/api/products/'. $product->id, [
             'Authorization' => 'Bearer ' . $token,  // Pass the Bearer token in the request
       
         ]);
@@ -70,4 +69,46 @@ class ProductApiTest extends TestCase
 
 
 
+ // Route::put("/{product}", [ProductController::class, "update"])->middleware("can:update,product");
+    public function test_update_withData_updatesProductBySpecificID()
+    {
+        $product = Product::factory()->create();
+         $user = User::factory()->create();
+        $token = $user->createToken('YourAppName')->plainTextToken; 
+    
+        // Define the updated product data
+        $updatedData = [
+            'name' => 'Updated Product',
+            'description' => 'Updated Description',
+            'price' => 150.00,
+            'stock_quantity' => 20,
+        ];
+    
+        // Make a PUT request to the /api/products/{product} route with the Bearer token
+        $response = $this->put('/api/products/' . $product->id, $updatedData, [
+            'Authorization' => 'Bearer ' . $token,  // Pass the Bearer token in the request
+        //    'Accept' => 'application/json',         // Ensure the response is JSON
+        ]);
+    
+        // Assert that the status code is 200 (OK)
+        $response->assertStatus(200);
+    
+        // Assert that the product was updated in the database
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'name' => 'Updated Product',
+            'description' => 'Updated Description',
+            'price' => 150.00,
+            'stock_quantity' => 20,
+        ]);
+    }
+
+
+
+
+
+
 }
+
+
+//
