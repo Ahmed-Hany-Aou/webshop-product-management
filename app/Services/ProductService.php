@@ -3,64 +3,87 @@
 namespace App\Services;
 
 use App\Models\Product;
-
-//implementation of the ProductServiceInterface/////
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductService implements ProductServiceInterface
 {
-
-    protected $priceAdjustmentService;
-
-    public function __construct(PriceAdjustmentService $priceAdjustmentService)
-    {
-        $this->priceAdjustmentService = $priceAdjustmentService;
-    }
-
-
-
-
-
+    /**
+     * Get all products
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function getAllProducts()
     {
-        // This method gets all the products
-        return Product::all();  
+        return Product::all();
     }
-    public function getProductsByID($id){
-
-        // this method returns product by specific ID
-        return Product::find($id); 
-    }
-
-    public function updateProduct($id, $validatedData)
+    
+    /**
+     * Get paginated products
+     *
+     * @param int $page
+     * @param int $perPage
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    public function getPaginatedProducts($page = 1, $perPage = 10)
     {
-        $product = Product::find($id);
-        if ($product) {
-            $product->update($validatedData);
-            // Adjust the price based on stock level
-            $product = $this->priceAdjustmentService->adjustPrice($product);
-            $product->save();  // Save the adjusted price
-            return $product;
-           
-        }
-        return null;
+        return Product::paginate($perPage, ['*'], 'page', $page);
     }
-
-    public function createProduct($validatedData)
+    
+    /**
+     * Create a new product
+     *
+     * @param array $data
+     * @return Product
+     */
+    public function createProduct(array $data)
     {
-        $product = Product::create($validatedData);
-        // Adjust the price based on stock level
-        $product = $this->priceAdjustmentService->adjustPrice($product);
-        $product->save();  // Save the adjusted price
-       return $product;
+        return Product::create($data);
     }
-    public function deleteProduct($id){
-        // This method deletes a product by ID
-        $product = Product::find($id);
-        if ($product) {
-            $product->delete();
-            return true;
+    
+    /**
+     * Get a product by ID
+     *
+     * @param int $id
+     * @return Product|null
+     */
+    public function getProductById($id)
+    {
+        return Product::find($id);
+    }
+    
+    /**
+     * Update a product
+     *
+     * @param int $id
+     * @param array $data
+     * @return Product|null
+     */
+    public function updateProduct($id, array $data)
+    {
+        $product = $this->getProductById($id);
+        
+        if (!$product) {
+            return null;
         }
-        return false; // or throw an exception if not found
+        
+        $product->update($data);
+        return $product;
+    }
+    
+    /**
+     * Delete a product
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function deleteProduct($id)
+    {
+        $product = $this->getProductById($id);
+        
+        if (!$product) {
+            return false;
+        }
+        
+        return $product->delete();
     }
 }
-

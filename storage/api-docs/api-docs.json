@@ -76,13 +76,22 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "token": {
-                                            "type": "string",
-                                            "example": "2|laravel_sanctum_X9WyR7SePZAdskjVasd..."
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 201
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "User created successfully"
+                                        },
+                                        "result": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "2|laravel_sanctum_X9WyR7SePZAdskjVasd..."
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -96,9 +105,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 409
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Email is already registered"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -112,18 +129,27 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "The given data was invalid."
                                         },
-                                        "errors": {
+                                        "result": {
                                             "properties": {
-                                                "email": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The email has already been taken."
-                                                    }
+                                                "errors": {
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "example": "The email has already been taken."
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -180,11 +206,144 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "token": {
-                                            "type": "string",
-                                            "example": "2|laravel_sanctum_X9WyR7SePZAdskjVasd..."
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
-                                        "user": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login successful"
+                                        },
+                                        "result": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "2|laravel_sanctum_X9WyR7SePZAdskjVasd..."
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "user@example.com"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2023-01-01T12:00:00Z"
+                                                        },
+                                                        "updated_at": {
+                                                            "type": "string",
+                                                            "format": "date-time",
+                                                            "example": "2023-01-01T12:00:00Z"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid credentials"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "result": {
+                                            "properties": {
+                                                "errors": {
+                                                    "properties": {
+                                                        "email": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "example": "The email field is required."
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get authenticated user",
+                "description": "Returns the currently authenticated user's details",
+                "operationId": "getUser",
+                "responses": {
+                    "200": {
+                        "description": "User details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User details retrieved successfully"
+                                        },
+                                        "result": {
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
@@ -218,104 +377,22 @@
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invalid credentials"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        },
-                                        "errors": {
-                                            "properties": {
-                                                "email": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The email field is required."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/user": {
-            "get": {
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Get authenticated user",
-                "description": "Returns the currently authenticated user's details",
-                "operationId": "getUser",
-                "responses": {
-                    "200": {
-                        "description": "User details",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "name": {
-                                            "type": "string",
-                                            "example": "John Doe"
-                                        },
-                                        "email": {
-                                            "type": "string",
-                                            "example": "user@example.com"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
                         "description": "Unauthenticated",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -346,9 +423,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Logged out successfully"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -362,9 +447,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -386,56 +479,129 @@
                     "Products"
                 ],
                 "summary": "Get all products",
-                "description": "Returns a list of all products",
+                "description": "Returns a paginated list of all products",
                 "operationId": "getProducts",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "id": {
-                                                "description": "Auto-generated product ID",
-                                                "type": "integer",
-                                                "example": 1
-                                            },
-                                            "name": {
-                                                "description": "Product name",
-                                                "type": "string",
-                                                "example": "Product Name"
-                                            },
-                                            "description": {
-                                                "description": "Product description",
-                                                "type": "string",
-                                                "example": "Product description"
-                                            },
-                                            "price": {
-                                                "description": "Product price",
-                                                "type": "number",
-                                                "format": "float",
-                                                "example": 99.99
-                                            },
-                                            "stock_quantity": {
-                                                "description": "Available stock quantity",
-                                                "type": "integer",
-                                                "example": 100
-                                            },
-                                            "created_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2023-01-01T12:00:00Z"
-                                            },
-                                            "updated_at": {
-                                                "type": "string",
-                                                "format": "date-time",
-                                                "example": "2023-01-01T12:00:00Z"
-                                            }
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
-                                        "type": "object"
-                                    }
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Products retrieved successfully"
+                                        },
+                                        "result": {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "description": "Auto-generated product ID",
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "description": "Product name",
+                                                                "type": "string",
+                                                                "example": "Product Name"
+                                                            },
+                                                            "description": {
+                                                                "description": "Product description",
+                                                                "type": "string",
+                                                                "example": "Product description"
+                                                            },
+                                                            "price": {
+                                                                "description": "Product price",
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 99.99
+                                                            },
+                                                            "stock_quantity": {
+                                                                "description": "Available stock quantity",
+                                                                "type": "integer",
+                                                                "example": 100
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2023-01-01T12:00:00Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2023-01-01T12:00:00Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "meta": {
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "take": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "items_count": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "total_items_count": {
+                                                            "type": "integer",
+                                                            "example": 100
+                                                        },
+                                                        "page_count": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "has_previous_page": {
+                                                            "type": "boolean",
+                                                            "example": false
+                                                        },
+                                                        "has_next_page": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -446,9 +612,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -462,9 +636,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "This action is unauthorized"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -478,9 +660,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 429
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Too Many Requests"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -547,41 +737,54 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "description": "Auto-generated product ID",
+                                        "status_code": {
                                             "type": "integer",
-                                            "example": 1
+                                            "example": 201
                                         },
-                                        "name": {
-                                            "description": "Product name",
+                                        "message": {
                                             "type": "string",
-                                            "example": "New Product"
+                                            "example": "Product created successfully"
                                         },
-                                        "description": {
-                                            "description": "Product description",
-                                            "type": "string",
-                                            "example": "Product description"
-                                        },
-                                        "price": {
-                                            "description": "Product price",
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 99.99
-                                        },
-                                        "stock_quantity": {
-                                            "description": "Available stock quantity",
-                                            "type": "integer",
-                                            "example": 100
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
+                                        "result": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Auto-generated product ID",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "description": "Product name",
+                                                    "type": "string",
+                                                    "example": "New Product"
+                                                },
+                                                "description": {
+                                                    "description": "Product description",
+                                                    "type": "string",
+                                                    "example": "Product description"
+                                                },
+                                                "price": {
+                                                    "description": "Product price",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 99.99
+                                                },
+                                                "stock_quantity": {
+                                                    "description": "Available stock quantity",
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -595,9 +798,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -611,9 +822,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "This action is unauthorized"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -627,37 +846,30 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "The given data was invalid."
                                         },
-                                        "errors": {
+                                        "result": {
                                             "properties": {
-                                                "name": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The name field is required."
-                                                    }
+                                                "errors": {
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "example": "The name field is required."
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Too Many Requests"
                                         }
                                     },
                                     "type": "object"
@@ -699,41 +911,54 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "description": "Auto-generated product ID",
+                                        "status_code": {
                                             "type": "integer",
-                                            "example": 1
+                                            "example": 200
                                         },
-                                        "name": {
-                                            "description": "Product name",
+                                        "message": {
                                             "type": "string",
-                                            "example": "Product Name"
+                                            "example": "Product retrieved successfully"
                                         },
-                                        "description": {
-                                            "description": "Product description",
-                                            "type": "string",
-                                            "example": "Product description"
-                                        },
-                                        "price": {
-                                            "description": "Product price",
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 99.99
-                                        },
-                                        "stock_quantity": {
-                                            "description": "Available stock quantity",
-                                            "type": "integer",
-                                            "example": 100
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
+                                        "result": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Auto-generated product ID",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "description": "Product name",
+                                                    "type": "string",
+                                                    "example": "Product Name"
+                                                },
+                                                "description": {
+                                                    "description": "Product description",
+                                                    "type": "string",
+                                                    "example": "Product description"
+                                                },
+                                                "price": {
+                                                    "description": "Product price",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 99.99
+                                                },
+                                                "stock_quantity": {
+                                                    "description": "Available stock quantity",
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -747,9 +972,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -763,9 +996,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "This action is unauthorized"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -779,25 +1020,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Product] 1"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Too Many Requests"
+                                            "example": "Product not found"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -875,41 +1108,54 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "description": "Auto-generated product ID",
+                                        "status_code": {
                                             "type": "integer",
-                                            "example": 1
+                                            "example": 200
                                         },
-                                        "name": {
-                                            "description": "Product name",
+                                        "message": {
                                             "type": "string",
-                                            "example": "Updated Product"
+                                            "example": "Product updated successfully"
                                         },
-                                        "description": {
-                                            "description": "Product description",
-                                            "type": "string",
-                                            "example": "Updated description"
-                                        },
-                                        "price": {
-                                            "description": "Product price",
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 149.99
-                                        },
-                                        "stock_quantity": {
-                                            "description": "Available stock quantity",
-                                            "type": "integer",
-                                            "example": 50
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2023-01-01T12:00:00Z"
+                                        "result": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Auto-generated product ID",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "description": "Product name",
+                                                    "type": "string",
+                                                    "example": "Updated Product"
+                                                },
+                                                "description": {
+                                                    "description": "Product description",
+                                                    "type": "string",
+                                                    "example": "Updated description"
+                                                },
+                                                "price": {
+                                                    "description": "Product price",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 149.99
+                                                },
+                                                "stock_quantity": {
+                                                    "description": "Available stock quantity",
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -923,9 +1169,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -939,9 +1193,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "This action is unauthorized"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -955,9 +1217,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Product] 1"
+                                            "example": "Product not found"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -971,37 +1241,30 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "The given data was invalid."
                                         },
-                                        "errors": {
+                                        "result": {
                                             "properties": {
-                                                "price": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The price must be at least 0."
-                                                    }
+                                                "errors": {
+                                                    "properties": {
+                                                        "price": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "example": "The price must be at least 0."
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Too Many Requests"
                                         }
                                     },
                                     "type": "object"
@@ -1041,9 +1304,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Product deleted successfully"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -1057,9 +1328,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Unauthenticated"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -1073,9 +1352,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "This action is unauthorized"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
@@ -1089,25 +1376,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status_code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "No query results for model [App\\\\Models\\\\Product] 1"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Too Many Requests"
+                                            "example": "Product not found"
+                                        },
+                                        "result": {
+                                            "type": "null",
+                                            "example": null
                                         }
                                     },
                                     "type": "object"
