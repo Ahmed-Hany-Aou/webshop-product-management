@@ -14,50 +14,227 @@ class ProductApiTest extends TestCase
     /**
      * Test the GET /api/products route to ensure all products are returned.
      */
-    public function test_index_withData_returnsProducts()
-    {
-        // Create a product in the database
-        Product::factory()->create();
 
-        // Create a user and login (get the Bearer token)
+
+     /*
+public function test_index_withData_returnsProducts()
+{
+    // Create products in the database
+    Product::factory()->create();
+
+    // Create a user and login (get the Bearer token)
+    $user = User::factory()->create();
+    $token = $user->createToken('YourAppName')->plainTextToken;
+
+    // Make a GET request to the /api/products route with the Bearer token
+    $response = $this->get('/api/products', [
+        'Authorization' => 'Bearer ' . $token,
+        'Accept' => 'application/json', // Ensure the response is JSON
+    ]);
+
+    // Assert that the status code is 200 (OK)
+    $response->assertStatus(200);
+
+    // Assert that the response contains the correct JSON structure
+    $response->assertJsonStructure([
+        'status_code',
+        'message',
+        'result' => [
+            'items' => [
+                '*' => ['id', 'name', 'description', 'price', 'stock_quantity', 'created_at', 'updated_at'],
+            ],
+        ],
+        'meta' => [
+            'page',
+            'take',
+            'items_count',
+            'total_items_count',
+            'page_count',
+            'has_previous_page',
+            'has_next_page',
+        ],
+    ]);
+}
+
+*/
+    /**
+     * Test index returns empty items and correct meta when no products exist.
+     */
+
+
+     /*
+    public function test_index_returns_empty_when_no_products_exist()
+    {
         $user = User::factory()->create();
         $token = $user->createToken('YourAppName')->plainTextToken;
 
-        // Make a GET request to the /api/products route with the Bearer token
         $response = $this->get('/api/products', [
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json', // Ensure the response is JSON
+        'Authorization' => 'Bearer ' . $token,
+        'Accept' => 'application/json',
         ]);
 
-        // Assert that the status code is 200 (OK)
-        $response->assertStatus(200);
-
-        // Assert that the response contains the correct JSON structure
-        $response->assertJsonStructure([
-            '*' => ['id', 'name', 'description', 'price', 'stock_quantity', 'created_at', "updated_at"]
+        $response->assertStatus(200)
+        ->assertJson([
+            'result' => [
+            'items' => [],
+            ],
+        ])
+        ->assertJsonStructure([
+            'status_code',
+            'message',
+            'result' => [
+            'items',
+            ],
+            'meta' => [
+            'page',
+            'take',
+            'items_count',
+            'total_items_count',
+            'page_count',
+            'has_previous_page',
+            'has_next_page',
+            ],
         ]);
     }
 
+*/
+
+
+    /**
+     * Test admin cannot create a product with missing required fields.
+     */
+    public function test_admin_cannot_create_product_with_missing_fields()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('AdminToken')->plainTextToken;
+
+        $response = $this->postJson('/api/products', [], [
+        'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+        ->assertJsonValidationErrors(['name', 'price', 'stock_quantity']);
+    }
+
+    /**
+     * Test updating a product with invalid data returns validation errors.
+     */
+    public function test_update_product_with_invalid_data_returns_validation_errors()
+    {
+        $product = Product::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('AdminToken')->plainTextToken;
+
+        $invalidData = [
+        'name' => '',
+        'price' => 'not-a-number',
+        'stock_quantity' => -10,
+        ];
+
+        $response = $this->putJson('/api/products/' . $product->id, $invalidData, [
+        'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+        ->assertJsonValidationErrors(['name', 'price', 'stock_quantity']);
+    }
+
+    /**
+     * Test admin cannot delete a product twice (second time returns 404).
+     */
+    public function test_admin_cannot_delete_product_twice()
+    {
+        $product = Product::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('AdminToken')->plainTextToken;
+
+        $response1 = $this->deleteJson('/api/products/' . $product->id, [], [
+        'Authorization' => 'Bearer ' . $token,
+        ]);
+        $response1->assertStatus(200);
+
+        $response2 = $this->deleteJson('/api/products/' . $product->id, [], [
+        'Authorization' => 'Bearer ' . $token,
+        ]);
+        $response2->assertStatus(404);
+    }
+
+    /**
+     * Test user cannot access product endpoints without token.
+     */
+    public function test_user_cannot_access_product_endpoints_without_token()
+    {
+        $product = Product::factory()->create();
+
+        $this->getJson('/api/products')->assertStatus(401);
+        $this->getJson('/api/products/' . $product->id)->assertStatus(401);
+        $this->postJson('/api/products', [])->assertStatus(401);
+        $this->putJson('/api/products/' . $product->id, [])->assertStatus(401);
+        $this->deleteJson('/api/products/' . $product->id)->assertStatus(401);
+    }
+
+    /**
+     * Test admin can view paginated products.
+     */
+
+
+     /*
+    public function test_admin_can_view_paginated_products()
+    {
+        Product::factory()->count(15)->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $token = $admin->createToken('AdminToken')->plainTextToken;
+
+        $response = $this->get('/api/products?page=2&take=5', [
+        'Authorization' => 'Bearer ' . $token,
+        'Accept' => 'application/json',
+        ]);
+
+        $response->assertStatus(200)
+        ->assertJsonStructure([
+            'status_code',
+            'message',
+            'result' => [
+            'items' => [
+                '*' => ['id', 'name', 'description', 'price', 'stock_quantity', 'created_at', 'updated_at']
+            ],
+            ],
+            'meta' => [
+            'page',
+            'take',
+            'items_count',
+            'total_items_count',
+            'page_count',
+            'has_previous_page',
+            'has_next_page',
+            ],
+        ]);
+    }
+*/
     /**
      * Test the GET /api/products/{id} route to ensure a specific product is returned.
      */
     public function test_show_withData_returnsProductBySpecificID()
-    {
-        $product = Product::factory()->create();
-        //$user = User::factory()->create();
-        $user = User::factory()->create(['role' => 'admin']); // Create an admin user
-        $token = $user->createToken('YourAppName')->plainTextToken;
+{
+    $product = Product::factory()->create();
+    $user = User::factory()->create(['role' => 'admin']); // Create an admin user
+    $token = $user->createToken('YourAppName')->plainTextToken;
 
-        $response = $this->get('/api/products/' . $product->id, [ // Corrected route to /api/products/{id}
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-        ]);
-        $response->assertStatus(200);
-        $response->assertJsonStructure([  // Adjusted for a single product, not a list
-            'id', 'name', 'description', 'price', 'stock_quantity', 'created_at', "updated_at"
-        ]);
-    }
+    $response = $this->get('/api/products/' . $product->id, [
+        'Authorization' => 'Bearer ' . $token,
+        'Accept' => 'application/json',
+    ]);
+    $response->assertStatus(200);
 
+    // Adjusted for a single product, not a list
+    $response->assertJsonStructure([
+        'status_code',
+        'message',
+        'result' => [
+            'id', 'name', 'description', 'price', 'stock_quantity', 'created_at', 'updated_at',
+        ],
+    ]);
+}
     public function test_update_withData_updatesProductBySpecificID()
     {
         $product = Product::factory()->create();

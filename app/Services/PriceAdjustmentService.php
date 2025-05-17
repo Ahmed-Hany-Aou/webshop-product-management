@@ -55,19 +55,24 @@ class PriceAdjustmentService
      * @param Product $product The product to adjust price for
      * @return Product The product with adjusted price
      */
-    public function adjustPrice(Product $product)
+     public function adjustPrice(Product $product)
     {
-        $stockQuantity = (int) $product->stock_quantity;
-        
-        if ($stockQuantity <= $this->lowStockThreshold) {
-            // Low stock - increase price by 10%
-            $product->price = $product->price * 1.10;
-        } elseif ($stockQuantity >= $this->highStockThreshold) {
-            // High stock - decrease price by 5%
-            $product->price = $product->price * 0.95;
+        // Define the thresholds and adjustment percentages
+        $lowStockThreshold = 10;
+        $highStockThreshold = 100;
+        $increasePercentage = 0.10; // Increase price by 10% for low stock
+        $decreasePercentage = 0.05; // Decrease price by 5% for high stock
+
+        // Adjust price based on stock levels
+        if ($product->stock_quantity <= $lowStockThreshold) {
+            // Low stock: Increase price by X%
+            $product->price += $product->price * $increasePercentage;  /// if products 10 or less increase price by 10%
+        } elseif ($product->stock_quantity >= $highStockThreshold) {  /// if products 100 or more decrease price by 5%
+            // High stock: Decrease price by Y%
+            $product->price -= $product->price * $decreasePercentage;
         }
-        // Between thresholds - no change
-        
+
+        // Return the updated product with adjusted price
         return $product;
     }
 }
