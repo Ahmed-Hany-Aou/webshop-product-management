@@ -1,14 +1,14 @@
 <?php
-// app/Http/Controllers/Backend/ProductController.php
 
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Http\Responses\ApiResponse;
 use App\Models\Product;
 use App\Services\ProductServiceInterface;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Add this import
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 
 /**
  * @OA\Tag(
@@ -16,11 +16,9 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // Add this import
  *     description="API Endpoints for product management"
  * )
  */
-  
-
 class ProductController extends Controller
 {
-    use AuthorizesRequests; // Include the trait here
+    use AuthorizesRequests;
 
     protected $productService;
 
@@ -29,8 +27,6 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
-
-    
     /**
      * List all products
      * 
@@ -39,22 +35,56 @@ class ProductController extends Controller
      *     operationId="getProducts",
      *     tags={"Products"},
      *     summary="Get all products",
-     *     description="Returns a list of all products",
+     *     description="Returns a paginated list of all products",
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
+     *             @OA\Property(property="status_code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
+     *             @OA\Property(
+     *                 property="result",
      *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
-     *                 @OA\Property(property="name", type="string", example="Product Name", description="Product name"),
-     *                 @OA\Property(property="description", type="string", example="Product description", description="Product description"),
-     *                 @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
-     *                 @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *                 @OA\Property(
+     *                     property="items",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
+     *                         @OA\Property(property="name", type="string", example="Product Name", description="Product name"),
+     *                         @OA\Property(property="description", type="string", example="Product description", description="Product description"),
+     *                         @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
+     *                         @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="meta",
+     *                     type="object",
+     *                     @OA\Property(property="page", type="integer", example=1),
+     *                     @OA\Property(property="take", type="integer", example=10),
+     *                     @OA\Property(property="items_count", type="integer", example=10),
+     *                     @OA\Property(property="total_items_count", type="integer", example=100),
+     *                     @OA\Property(property="page_count", type="integer", example=10),
+     *                     @OA\Property(property="has_previous_page", type="boolean", example=false),
+     *                     @OA\Property(property="has_next_page", type="boolean", example=true)
+     *                 )
      *             )
      *         )
      *     ),
@@ -62,35 +92,45 @@ class ProductController extends Controller
      *         response=401,
      *         description="Unauthenticated",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *             @OA\Property(property="status_code", type="integer", example=401),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
+     *             @OA\Property(property="status_code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=429,
      *         description="Too Many Requests",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Too Many Requests")
+     *             @OA\Property(property="status_code", type="integer", example=429),
+     *             @OA\Property(property="message", type="string", example="Too Many Requests"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     )
      * )
      */
-
-
-    public function index()
+    public function index(Request $request)
     {
-        $products = $this->productService->getAllProducts();
-        return response()->json($products);
+        // Get pagination parameters from request or use defaults
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
+        
+        // Get paginated products
+        $products = $this->productService->getPaginatedProducts($page, $perPage);
+        
+        // Return standardized paginated response
+        return ApiResponse::paginate($products, 'Products retrieved successfully');
     }
 
-
-     /**
+    /**
      * Create a new product
      * 
      * @OA\Post(
@@ -114,66 +154,71 @@ class ProductController extends Controller
      *         response=201,
      *         description="Product created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
-     *             @OA\Property(property="name", type="string", example="New Product", description="Product name"),
-     *             @OA\Property(property="description", type="string", example="Product description", description="Product description"),
-     *             @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
-     *             @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
-     *             @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             @OA\Property(property="status_code", type="integer", example=201),
+     *             @OA\Property(property="message", type="string", example="Product created successfully"),
+     *             @OA\Property(
+     *                 property="result",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
+     *                 @OA\Property(property="name", type="string", example="New Product", description="Product name"),
+     *                 @OA\Property(property="description", type="string", example="Product description", description="Product description"),
+     *                 @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
+     *                 @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
      *         description="Unauthenticated",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *             @OA\Property(property="status_code", type="integer", example=401),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
+     *             @OA\Property(property="status_code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
+     *             @OA\Property(property="status_code", type="integer", example=422),
      *             @OA\Property(property="message", type="string", example="The given data was invalid."),
      *             @OA\Property(
-     *                 property="errors",
+     *                 property="result",
      *                 type="object",
      *                 @OA\Property(
-     *                     property="name",
-     *                     type="array",
-     *                     @OA\Items(type="string", example="The name field is required.")
+     *                     property="errors",
+     *                     type="object",
+     *                     @OA\Property(
+     *                         property="name",
+     *                         type="array",
+     *                         @OA\Items(type="string", example="The name field is required.")
+     *                     )
      *                 )
      *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=429,
-     *         description="Too Many Requests",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Too Many Requests")
      *         )
      *     )
      * )
      */
-
-
-
     public function store(ProductRequest $request)
     {
-        $validatedData = $request->validated();  // Validate the request data
-        $product = $this->productService->createProduct($validatedData);  // Create the product
-        return response()->json($product, 201);  // Return the created product with a 201 status
+        $validatedData = $request->validated();
+        $product = $this->productService->createProduct($validatedData);
+        
+        return ApiResponse::success($product, 'Product created successfully', 201);
     }
 
-
-     /**
+    /**
      * Get a specific product
      * 
      * @OA\Get(
@@ -194,59 +239,57 @@ class ProductController extends Controller
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
-     *             @OA\Property(property="name", type="string", example="Product Name", description="Product name"),
-     *             @OA\Property(property="description", type="string", example="Product description", description="Product description"),
-     *             @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
-     *             @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
-     *             @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             @OA\Property(property="status_code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Product retrieved successfully"),
+     *             @OA\Property(
+     *                 property="result",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
+     *                 @OA\Property(property="name", type="string", example="Product Name", description="Product name"),
+     *                 @OA\Property(property="description", type="string", example="Product description", description="Product description"),
+     *                 @OA\Property(property="price", type="number", format="float", example=99.99, description="Product price"),
+     *                 @OA\Property(property="stock_quantity", type="integer", example=100, description="Available stock quantity"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
      *         description="Unauthenticated",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *             @OA\Property(property="status_code", type="integer", example=401),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
+     *             @OA\Property(property="status_code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Product not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Product] 1")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=429,
-     *         description="Too Many Requests",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Too Many Requests")
+     *             @OA\Property(property="status_code", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     )
      * )
      */
-
-
-
-
-
-    public function show(Product $product) // Use route model binding here
+    public function show(Product $product)
     {
-        // The $product instance is now automatically injected by Laravel if found.
-        // If not found, Laravel automatically returns a 404.
         $this->authorize("view", $product);
-        return response()->json($product);
+        return ApiResponse::success($product, 'Product retrieved successfully');
     }
-    
-   /**
+
+    /**
      * Update a product
      * 
      * @OA\Put(
@@ -277,87 +320,85 @@ class ProductController extends Controller
      *         response=200,
      *         description="Product updated successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
-     *             @OA\Property(property="name", type="string", example="Updated Product", description="Product name"),
-     *             @OA\Property(property="description", type="string", example="Updated description", description="Product description"),
-     *             @OA\Property(property="price", type="number", format="float", example=149.99, description="Product price"),
-     *             @OA\Property(property="stock_quantity", type="integer", example=50, description="Available stock quantity"),
-     *             @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             @OA\Property(property="status_code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Product updated successfully"),
+     *             @OA\Property(
+     *                 property="result",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1, description="Auto-generated product ID"),
+     *                 @OA\Property(property="name", type="string", example="Updated Product", description="Product name"),
+     *                 @OA\Property(property="description", type="string", example="Updated description", description="Product description"),
+     *                 @OA\Property(property="price", type="number", format="float", example=149.99, description="Product price"),
+     *                 @OA\Property(property="stock_quantity", type="integer", example=50, description="Available stock quantity"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T12:00:00Z")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
      *         description="Unauthenticated",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *             @OA\Property(property="status_code", type="integer", example=401),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
+     *             @OA\Property(property="status_code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Product not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Product] 1")
+     *             @OA\Property(property="status_code", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
+     *             @OA\Property(property="status_code", type="integer", example=422),
      *             @OA\Property(property="message", type="string", example="The given data was invalid."),
      *             @OA\Property(
-     *                 property="errors",
+     *                 property="result",
      *                 type="object",
      *                 @OA\Property(
-     *                     property="price",
-     *                     type="array",
-     *                     @OA\Items(type="string", example="The price must be at least 0.")
+     *                     property="errors",
+     *                     type="object",
+     *                     @OA\Property(
+     *                         property="price",
+     *                         type="array",
+     *                         @OA\Items(type="string", example="The price must be at least 0.")
+     *                     )
      *                 )
      *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=429,
-     *         description="Too Many Requests",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Too Many Requests")
      *         )
      *     )
      * )
      */
+    public function update(ProductRequest $request, Product $product)
+    {
+        $this->authorize("update", $product);
+        $validatedData = $request->validated();
+        $updatedProduct = $this->productService->updateProduct($product->id, $validatedData);
 
-public function update(ProductRequest $request, Product $product) // Using ProductRequest for validation
-{
-    // 1. Authorize the action (optional if you handle this with route middleware, but good for explicitness)
-    $this->authorize("update", $product);
-
-    // 2. Get validated data from the request
-    $validatedData = $request->validated();
-
-    // 3. Call your service to update the product
-    // The $product->id comes from the route model bound $product instance
-    $updatedProduct = $this->productService->updateProduct($product->id, $validatedData);
-
-    // 4. Check if the product was successfully updated by the service
-    if ($updatedProduct) {
-        return response()->json($updatedProduct);
-    } else {
-        // This case might occur if your service returns null when a product isn't found,
-        // though route model binding should typically handle 404s before this.
-        // However, it's good practice if your service *could* return null for other reasons.
-        return response()->json(["message" => "Product could not be updated or was not found by the service"], 404); 
+        if ($updatedProduct) {
+            return ApiResponse::success($updatedProduct, 'Product updated successfully');
+        } else {
+            return ApiResponse::error('Product could not be updated', 404);
+        }
     }
-}
 
-
-/**
+    /**
      * Delete a product
      * 
      * @OA\Delete(
@@ -378,57 +419,43 @@ public function update(ProductRequest $request, Product $product) // Using Produ
      *         response=200,
      *         description="Product deleted successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product deleted successfully")
+     *             @OA\Property(property="status_code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Product deleted successfully"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
      *         description="Unauthenticated",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *             @OA\Property(property="status_code", type="integer", example=401),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized")
+     *             @OA\Property(property="status_code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="This action is unauthorized"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Product not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Product] 1")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=429,
-     *         description="Too Many Requests",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Too Many Requests")
+     *             @OA\Property(property="status_code", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="result", type="null", example=null)
      *         )
      *     )
      * )
      */
-
-
-    
-   public function destroy(Product $product) // <-- Changed $id to Product $product
-{
-    // The $product instance is now automatically injected by Laravel.
-    // If not found, Laravel automatically returns a 404 before this method is called.
-    
-    // The route middleware "can:delete,product" will already have authorized this.
-    // However, if you prefer explicit authorization in the controller as a double-check
-    // or if you remove the route middleware, you can keep this line:
-    // $this->authorize("delete", $product);
-    // If the route middleware handles it, this line in the controller might be redundant
-    // but doesn't harm (it will just run the policy check again).
-
-    $this->productService->deleteProduct($product->id);
-
-    return response()->json(["message" => "Product deleted successfully"]);
-}
-
+    public function destroy(Product $product)
+    {
+        $this->productService->deleteProduct($product->id);
+        return ApiResponse::success(null, 'Product deleted successfully');
+    }
 }
