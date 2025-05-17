@@ -118,17 +118,18 @@ class ProductController extends Controller
      * )
      */
     public function index(Request $request)
-    {
-        // Get pagination parameters from request or use defaults
-        $page = $request->input('page', 1);
-        $perPage = $request->input('per_page', 10);
-        
-        // Get paginated products
-        $products = $this->productService->getPaginatedProducts($page, $perPage);
-        
-        // Return standardized paginated response
-        return ApiResponse::paginate($products, 'Products retrieved successfully');
-    }
+{
+    // Get pagination parameters from request or use defaults
+    $page = $request->input('page', 1);
+    $perPage = $request->input('per_page', 10);
+
+    // Get paginated products
+    $products = $this->productService->getPaginatedProducts($page, $perPage);
+
+    // Return standardized paginated response
+    return ApiResponse::paginate($products, 'Products retrieved successfully');
+}
+
 
     /**
      * Create a new product
